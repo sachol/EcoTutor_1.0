@@ -71,7 +71,10 @@ import {
   Sun,
   Moon,
   Smartphone,
-  MousePointer2
+  MousePointer2,
+  Terminal,
+  Cpu,
+  MonitorCheck
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -104,6 +107,7 @@ interface Message {
     url: string;
   };
   quizData?: QuizQuestion[];
+  imageUrl?: string;
 }
 
 interface ChartData {
@@ -148,48 +152,6 @@ const INITIAL_MESSAGES: Message[] = [{
   text: `안녕하세요! **EcoTutor: 부동산 경제 마스터**입니다. 🏠\n\n지능형 문답 학습을 통해 부동산 거시경제, 미시경제, 그리고 복잡한 정책과 세금을 완벽하게 마스터해 보세요. 학습하고 싶은 테마를 선택하거나 궁금한 점을 직접 물어보세요.`
 }];
 
-const COURSES = [
-  { 
-    id: 'intro',
-    title: "입문 코스", 
-    desc: "기초 대출 용어와 부동산 시장의 기초 원리", 
-    topics: ["LTV/DTI/DSR", "전세가율의 의미", "청약 제도 기초", "부동산 세금 기초"],
-    icon: BookOpen,
-    color: "bg-blue-500",
-    quizTopics: [
-      "부동산 입문 단계의 대출 규제(LTV/DSR) 기초 퀴즈 3문제를 quiz-data 형식으로 내줘.",
-      "부동산 입문 필수 기초 용어 퀴즈 3문제를 quiz-data 형식으로 내줘.",
-      "부동산 입문자를 위한 취득세/보유세 기초 퀴즈 3문제를 quiz-data 형식으로 내줘."
-    ]
-  },
-  { 
-    id: 'intermediate',
-    title: "중급 코스", 
-    desc: "수급 분석과 시장 흐름 읽기", 
-    topics: ["금리 상관관계", "입주물량 분석", "갭투자 원리", "경매 기초"],
-    icon: TrendingUp,
-    color: "bg-purple-500",
-    quizTopics: [
-      "중급 단계의 금리와 부동산 가격 상관관계 퀴즈 3문제를 quiz-data 형식으로 내줘.",
-      "중급 단계의 입주물량 및 수급 분석 퀴즈 3문제를 quiz-data 형식으로 내줘.",
-      "중급 단계의 갭투자 원리와 리스크 퀴즈 3문제를 quiz-data 형식으로 내줘."
-    ]
-  },
-  { 
-    id: 'advanced',
-    title: "고급 코스", 
-    desc: "세금 전략과 거시경제 로드맵", 
-    topics: ["절세 전략", "부동산 사이클", "포트폴리오 구성", "재건축 재개발"],
-    icon: Award,
-    color: "bg-amber-500",
-    quizTopics: [
-      "고급 단계의 양도세 비과세 및 절세 전략 퀴즈 3문제를 quiz-data 형식으로 내줘.",
-      "고급 단계의 부동산 사이클 4단계 분석 퀴즈 3문제를 quiz-data 형식으로 내줘.",
-      "고급 단계의 재건축/재개발 규제 및 사업성 퀴즈 3문제를 quiz-data 형식으로 내줘."
-    ]
-  }
-];
-
 const CATEGORIZED_STARTERS = [
   {
     category: "거시경제 (Macro)",
@@ -201,7 +163,7 @@ const CATEGORIZED_STARTERS = [
       "미국 연준(Fed) 금리 인상이 한국 부동산에 미치는 영향은?",
       "현재 부동산 사이클이 어느 단계인지 분석해줘",
       "인플레이션 시대에 실물 자산으로서 부동산의 가치 변화는?",
-      "인구 구조 변화가 중장기 주택 수요에 미치는 영향 분석해줘"
+      "국내 가계부채 수준과 금리 변동이 부동산 시장에 미치는 하방 압력 분석"
     ]
   },
   {
@@ -214,7 +176,7 @@ const CATEGORIZED_STARTERS = [
       "특정 지역의 입주 물량과 전세가의 상관관계를 알려줘",
       "갭투자의 원리와 리스크 관리 방안을 요약해줘",
       "학군지와 역세권 중 하락장에서 방어력이 더 강한 곳은 어디야?",
-      "랜드마크 대단지 아파트가 주변 중소단지 시세에 주는 영향은?"
+      "랜드마크 대단지 아파트의 시세 변화가 주변 준신축 단지에 전이되는 속도 분석"
     ]
   },
   {
@@ -227,7 +189,7 @@ const CATEGORIZED_STARTERS = [
       "LTV, DTI, DSR의 차이점과 대출 한도 계산법을 알려줘",
       "1주택자 양도세 비과세 요건과 절세 전략을 설명해줘",
       "분양가 상한제 지역과 해제 지역의 차이점과 투자 주의사항은?",
-      "증여세 취득세 중과 여부와 합리적인 부의 이전 전략 알려줘"
+      "상속/증여 시 취득세 및 가액 산정 기준과 법인 투자의 장단점 비교"
     ]
   }
 ];
@@ -269,7 +231,7 @@ const SIMULATION_SCENARIOS = [
     subTopics: [
       "공사비 폭등으로 인한 정비사업 중단이 3년 뒤 신축 공급에 미치는 영향",
       "재건축 초과이익 환수제 완화가 주요 단지별 사업성과 투자 수익률에 주는 변화",
-      "서울 도심 내 인허가 물량 급감이 이른바 '얼죽신(신축 선호)' 현상을 심화시키는 과정"
+      "서울 도심 내 인허가 물량 급감이 '얼죽신' 현상을 심화시키는 과정"
     ]
   },
   {
@@ -280,9 +242,9 @@ const SIMULATION_SCENARIOS = [
     color: "text-amber-500",
     bg: "bg-amber-50",
     subTopics: [
-      "GTX-A/B/C 노선별 착공 및 개통 시점 앞뒤의 전세가와 매매가 변동 추이 비교",
-      "용인 반도체 클러스터 등 대규모 일자리 배후 주거지의 중장기적 자산 가치 상승률 시뮬레이션",
-      "지하철 연장선 확정 발표가 인근 소외 지역 부동산의 저평가 해소에 주는 영향 분석"
+      "GTX 노선별 개통 시점 앞뒤의 전세가와 매매가 변동 추이 비교",
+      "대규모 반도체 클러스터 일자리 유입에 따른 주거지 상승률 시뮬레이션",
+      "지하철 연장선 확정 발표가 저평가 지역에 주는 실질적 영향"
     ]
   }
 ];
@@ -326,79 +288,135 @@ const ANALYSIS_GUIDES = [
   }
 ];
 
-// --- Helper Functions ---
+// --- Helpers ---
+/**
+ * Fix for Error: Cannot find name 'fileToBase64'.
+ * Utility to convert a File object to a base64 string for Gemini API consumption.
+ */
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve((reader.result as string).split(',')[1]);
-    reader.onerror = error => reject(error);
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
   });
 };
 
-// --- Quiz Component ---
-const QuizView: React.FC<{ questions: QuizQuestion[]; onComplete: (score: number, total: number, results: any[]) => void; theme: ThemeType }> = ({ questions, onComplete, theme }) => {
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+// --- Components ---
 
-  const q = questions[currentIdx];
+const ThemeToggle: React.FC<{ theme: ThemeType; toggle: () => void }> = ({ theme, toggle }) => (
+  <button 
+    onClick={toggle}
+    className={`p-2.5 rounded-2xl transition-all flex items-center gap-2 font-bold text-xs ${
+      theme === 'dark' ? 'bg-slate-800 text-amber-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+    }`}
+  >
+    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+    <span className="hidden sm:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+  </button>
+);
 
-  const handleNext = () => {
-    const isCorrect = selected === q.correctAnswer;
-    const newResults = [...results, { question: q.question, isCorrect, correctText: q.options[q.correctAnswer], explanation: q.explanation }];
-    
-    if (currentIdx === questions.length - 1) {
-      onComplete(newResults.filter(r => r.isCorrect).length, questions.length, newResults);
-    } else {
-      setResults(newResults);
-      setCurrentIdx(currentIdx + 1);
-      setSelected(null);
-      setIsAnswered(false);
+const ApiSettingsModal: React.FC<{ isOpen: boolean; onClose: () => void; theme: ThemeType }> = ({ isOpen, onClose, theme }) => {
+  const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [testResult, setTestResult] = useState<string>('');
+  const isDark = theme === 'dark';
+
+  if (!isOpen) return null;
+
+  const handleOpenSelect = async () => {
+    try {
+      if (window.aistudio) {
+        await window.aistudio.openSelectKey();
+        alert("API 키 선택 대화상자가 열렸습니다. 설정을 완료한 후 테스트를 시도하세요.");
+      } else {
+        alert("window.aistudio 객체를 찾을 수 없습니다. 지원되는 환경인지 확인해 주세요.");
+      }
+    } catch (e) {
+      alert("API 설정창을 여는 중 오류가 발생했습니다.");
     }
   };
 
-  const isDark = theme === 'dark';
+  const handleTestKey = async (model: string) => {
+    setTestStatus('loading');
+    setTestResult('');
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      let response;
+      if (model.includes('image')) {
+        response = await ai.models.generateContent({
+          model,
+          contents: [{ parts: [{ text: "ping" }] }],
+        });
+      } else {
+        response = await ai.models.generateContent({
+          model,
+          contents: "Hello, confirm this API key works. Respond with 'API OK'."
+        });
+      }
+      setTestResult(response.text || "응답이 비어있습니다.");
+      setTestStatus('success');
+    } catch (e: any) {
+      setTestStatus('error');
+      setTestResult(e.message || "연결 실패");
+    }
+  };
 
   return (
-    <div className={`${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} border rounded-[40px] p-8 shadow-xl max-w-2xl mx-auto my-8 animate-in zoom-in-95 duration-500`}>
-      <div className="flex items-center justify-between mb-8">
-        <span className={`px-4 py-1.5 ${isDark ? 'bg-indigo-900/40 text-indigo-400' : 'bg-indigo-50 text-indigo-600'} rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2`}>
-          <BrainCircuit size={14} /> Question {currentIdx + 1} / {questions.length}
-        </span>
-      </div>
-      <h3 className={`text-xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-800'} mb-8 leading-tight`}>{q.question}</h3>
-      <div className="space-y-3">
-        {q.options.map((opt, i) => (
-          <button 
-            key={i} 
-            disabled={isAnswered}
-            onClick={() => setSelected(i)}
-            className={`w-full text-left p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${
-              selected === i 
-                ? (isAnswered ? (i === q.correctAnswer ? 'border-emerald-500 bg-emerald-500/10' : 'border-rose-500 bg-rose-500/10') : 'border-indigo-600 bg-indigo-600/10 shadow-md')
-                : (isAnswered && i === q.correctAnswer ? 'border-emerald-500 bg-emerald-500/10' : (isDark ? 'border-slate-700 bg-slate-800/50 hover:bg-slate-700' : 'border-slate-100 bg-slate-50 hover:bg-white hover:border-slate-300'))
-            }`}
-          >
-            <span className={`font-semibold ${selected === i ? 'text-indigo-500' : (isDark ? 'text-slate-300' : 'text-slate-600')}`}>{opt}</span>
-            {isAnswered && i === q.correctAnswer && <CheckCircle2 size={20} className="text-emerald-500" />}
-          </button>
-        ))}
-      </div>
-      {!isAnswered ? (
-        <button onClick={() => setIsAnswered(true)} disabled={selected === null} className="w-full mt-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 disabled:opacity-30 transition-all shadow-lg shadow-indigo-100">정답 확인</button>
-      ) : (
-        <div className="mt-8">
-          <div className={`p-5 ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-100'} rounded-2xl border mb-6`}>
-            <h4 className={`text-xs font-black ${isDark ? 'text-slate-500' : 'text-slate-400'} uppercase mb-2`}>AI 해설</h4>
-            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'} leading-relaxed font-medium`}>{q.explanation}</p>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+      <div className={`${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'} rounded-[40px] shadow-2xl max-w-lg w-full overflow-hidden animate-in zoom-in-95 border`}>
+        <div className="p-8">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-800'}`}>API 설정 및 테스트</h3>
+            <button onClick={onClose} className={`p-2 rounded-full ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'}`}><X size={20} /></button>
           </div>
-          <button onClick={handleNext} className={`w-full py-4 ${isDark ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-bold transition-all`}>
-            {currentIdx === questions.length - 1 ? '결과 보기' : '다음 문제'}
-          </button>
+          
+          <div className="space-y-6">
+            <div className={`p-5 rounded-3xl ${isDark ? 'bg-indigo-900/20 border-indigo-900/30' : 'bg-indigo-50 border-indigo-100'} border`}>
+              <h4 className="text-sm font-black text-indigo-500 mb-2 flex items-center gap-2"><Key size={16} /> API 키 선택</h4>
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'} mb-4`}>결제 수단이 등록된 유료 프로젝트의 API 키를 선택해야 모든 고급 기능을 사용할 수 있습니다.</p>
+              <button onClick={handleOpenSelect} className="w-full py-3 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                <Settings size={18} /> API 키 선택창 열기
+              </button>
+              <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="text-[10px] text-indigo-400 hover:underline mt-2 block text-center">결제 관련 문서 확인하기</a>
+            </div>
+
+            <div className={`p-5 rounded-3xl ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'} border`}>
+              <h4 className={`text-sm font-black ${isDark ? 'text-slate-300' : 'text-slate-700'} mb-4 flex items-center gap-2`}><MonitorCheck size={16} /> 모델 연결 테스트</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => handleTestKey('gemini-3-flash-preview')}
+                  className={`py-2 px-3 rounded-xl text-[10px] font-black border transition-all ${isDark ? 'bg-slate-900 border-slate-700 hover:bg-indigo-600' : 'bg-white border-slate-200 hover:bg-indigo-600 hover:text-white'}`}
+                >
+                  Text Model Test
+                </button>
+                <button 
+                  onClick={() => handleTestKey('gemini-3-pro-image-preview')}
+                  className={`py-2 px-3 rounded-xl text-[10px] font-black border transition-all ${isDark ? 'bg-slate-900 border-slate-700 hover:bg-indigo-600' : 'bg-white border-slate-200 hover:bg-indigo-600 hover:text-white'}`}
+                >
+                  Visual AI Test
+                </button>
+              </div>
+
+              {testStatus !== 'idle' && (
+                <div className={`mt-4 p-3 rounded-xl text-xs font-bold flex items-center gap-3 ${
+                  testStatus === 'loading' ? 'text-slate-400 bg-slate-400/5' :
+                  testStatus === 'success' ? 'text-emerald-500 bg-emerald-500/10' : 'text-rose-500 bg-rose-500/10'
+                }`}>
+                  {testStatus === 'loading' ? <Loader2 size={16} className="animate-spin" /> : 
+                   testStatus === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                  <span className="truncate">{testResult || (testStatus === 'loading' ? 'Testing...' : '')}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button onClick={onClose} className="w-full mt-8 py-4 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-[20px] font-black hover:opacity-90 transition-all">설정 완료</button>
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -408,66 +426,66 @@ const GuideModal: React.FC<{ isOpen: boolean; onClose: () => void; theme: ThemeT
   if (!isOpen) return null;
   const isDark = theme === 'dark';
 
+  const sections = [
+    {
+      icon: MessageSquare,
+      title: "지능형 문답 & 퀴즈 학습",
+      value: "단순 정보를 넘어 거시경제 흐름과 정책을 AI와 실시간 토론하며 학습합니다. 학습 후 생성되는 퀴즈로 지식을 내재화하고 포인트를 얻으세요.",
+      usage: "채팅창에 부동산 키워드나 궁금한 정책을 입력하거나, 추천 스타터를 클릭하여 대화를 시작하세요.",
+      color: "indigo"
+    },
+    {
+      icon: Activity,
+      title: "정밀 시나리오 시뮬레이터",
+      value: "금리, 공급, 교통망 등 미래 변수가 시세에 미치는 영향을 가상으로 체험하여 투자 확신을 얻고 리스크를 방어합니다.",
+      usage: "시뮬레이션 탭에서 시나리오 카드를 선택하고 세부 주제를 클릭하여 변화 양상을 분석받으세요.",
+      color: "rose"
+    },
+    {
+      icon: FileSearch,
+      title: "부동산 문서 정밀 분석 (OCR)",
+      value: "복잡한 서류 속 위험 요소를 AI가 즉시 판독하여 전세 사기나 불리한 계약으로부터 자산을 보호합니다.",
+      usage: "문서 분석 탭에서 등기부나 계약서 사진을 업로드하고 유형별 가이드를 클릭해 권리 관계를 확인하세요.",
+      color: "emerald"
+    },
+    {
+      icon: LayoutDashboard,
+      title: "학습 매니저 (Dashboard)",
+      value: "자신의 학습 진척도와 포인트, 등급을 관리하며 체계적인 부동산 전문가 로드맵을 따라갈 수 있습니다.",
+      usage: "대시보드에서 커리큘럼별 퀴즈를 풀고 누적된 포인트를 확인하며 상급 코스에 도전하세요.",
+      color: "amber"
+    }
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-      <div className={`${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'} rounded-[48px] shadow-2xl max-w-2xl w-full overflow-hidden animate-in zoom-in-95 border max-h-[90vh] flex flex-col`}>
+      <div className={`${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'} rounded-[48px] shadow-2xl max-w-3xl w-full overflow-hidden animate-in zoom-in-95 border max-h-[90vh] flex flex-col`}>
         <div className="p-8 overflow-y-auto custom-scrollbar">
           <div className="flex justify-between items-start mb-8">
             <div className="bg-indigo-600 p-4 rounded-3xl text-white shadow-xl shadow-indigo-900/30 animate-pulse"><Sparkles size={28} /></div>
             <button onClick={onClose} className={`p-3 ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'} rounded-full transition-colors`}><X size={24} className={isDark ? 'text-slate-500' : 'text-slate-400'} /></button>
           </div>
           
-          <h3 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-800'} mb-2`}>EcoTutor: 부동산 경제 마스터 🏠</h3>
-          <p className={`${isDark ? 'text-slate-400' : 'text-slate-500'} font-medium mb-10 text-lg`}>데이터와 AI로 설계하는 당신의 스마트한 부동산 자산 전략</p>
+          <h3 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-800'} mb-2`}>EcoTutor 사용 가이드 🏠</h3>
+          <p className={`${isDark ? 'text-slate-400' : 'text-slate-500'} font-medium mb-10 text-lg`}>도시아재(신화부동산)가 설계한 차세대 부동산 경제 지능형 튜터</p>
           
-          <div className="space-y-10">
-            {/* Feature 1 */}
-            <div className="flex gap-6 group">
-              <div className="shrink-0 w-14 h-14 rounded-3xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform"><MessageSquare size={28} /></div>
-              <div>
-                <h4 className={`text-xl font-black ${isDark ? 'text-slate-100' : 'text-slate-800'} mb-2`}>지능형 문답 & 퀴즈 학습</h4>
-                <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'} font-medium`}>
-                   단순 검색을 넘어 거시경제 흐름, 복잡한 정책과 세제 혜택을 AI 튜터와 실시간으로 토론하세요. 
-                   학습 후 생성되는 **맞춤형 퀴즈**는 지식을 장기 기억으로 전환하며 포인트를 쌓는 즐거움을 줍니다.
-                </p>
+          <div className="space-y-12">
+            {sections.map((s, idx) => (
+              <div key={idx} className="flex gap-6 group">
+                <div className={`shrink-0 w-16 h-16 rounded-3xl bg-${s.color}-500/10 text-${s.color}-500 flex items-center justify-center group-hover:scale-110 transition-transform`}><s.icon size={32} /></div>
+                <div>
+                  <h4 className={`text-xl font-black ${isDark ? 'text-slate-100' : 'text-slate-800'} mb-2`}>{s.title}</h4>
+                  <div className={`p-4 rounded-2xl ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'} border ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+                    <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'} font-bold mb-3`}>
+                      <span className="text-indigo-500">기능적 가치:</span> {s.value}
+                    </p>
+                    <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-500' : 'text-slate-500'} font-medium`}>
+                      <span className="font-black">사용 방법:</span> {s.usage}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="flex gap-6 group">
-              <div className="shrink-0 w-14 h-14 rounded-3xl bg-rose-500/10 text-rose-500 flex items-center justify-center group-hover:scale-110 transition-transform"><Activity size={28} /></div>
-              <div>
-                <h4 className={`text-xl font-black ${isDark ? 'text-slate-100' : 'text-slate-800'} mb-2`}>정밀 시나리오 시뮬레이터</h4>
-                <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'} font-medium`}>
-                  금리 인상, GTX 착공, 공사비 폭등 등 **현실적인 변수를 시뮬레이션**하여 3년 뒤 미래 시세를 예측해 보세요. 
-                  막연한 불안감을 객관적 데이터 기반의 확신으로 바꾸어 투자 리스크를 최소화합니다.
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="flex gap-6 group">
-              <div className="shrink-0 w-14 h-14 rounded-3xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform"><FileSearch size={28} /></div>
-              <div>
-                <h4 className={`text-xl font-black ${isDark ? 'text-slate-100' : 'text-slate-800'} mb-2`}>부동산 문서 OCR 정밀 분석</h4>
-                <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'} font-medium`}>
-                  등기부등본, 건축물대장, 계약서를 사진 찍어 올리세요. AI가 **권리관계의 사각지대나 독소조항**을 실시간으로 판독합니다. 
-                  전문가의 조언을 받기 전, 첫 번째 방어선이 되어 당신의 재산을 지켜드립니다.
-                </p>
-              </div>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="flex gap-6 group">
-              <div className="shrink-0 w-14 h-14 rounded-3xl bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform"><LayoutDashboard size={28} /></div>
-              <div>
-                <h4 className={`text-xl font-black ${isDark ? 'text-slate-100' : 'text-slate-800'} mb-2`}>게이미피케이션 대시보드</h4>
-                <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'} font-medium`}>
-                  당신의 성장 지표를 시각적으로 확인하세요. 등급이 올라갈수록 더 고도화된 고급 코스가 열리며, 
-                  축적된 데이터는 당신만의 **부동산 지식 포트폴리오**가 됩니다.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center">
@@ -480,12 +498,97 @@ const GuideModal: React.FC<{ isOpen: boolean; onClose: () => void; theme: ThemeT
   );
 };
 
+/**
+ * Fix for Error: Cannot find name 'QuizView'.
+ * Interactive Quiz Component to render AI-generated quiz questions and handle user interaction.
+ */
+const QuizView: React.FC<{ 
+  questions: QuizQuestion[]; 
+  onComplete: (score: number, total: number) => void;
+  theme: ThemeType;
+}> = ({ questions, onComplete, theme }) => {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const isDark = theme === 'dark';
+
+  const handleAnswer = (idx: number) => {
+    if (isAnswered) return;
+    setSelected(idx);
+    setIsAnswered(true);
+    if (idx === questions[currentIdx].correctAnswer) {
+      setScore(s => s + 1);
+    }
+  };
+
+  const nextQuestion = () => {
+    if (currentIdx < questions.length - 1) {
+      setCurrentIdx(currentIdx + 1);
+      setSelected(null);
+      setIsAnswered(false);
+    } else {
+      const finalScore = score + (selected === questions[currentIdx].correctAnswer ? 0 : 0);
+      onComplete(score, questions.length);
+    }
+  };
+
+  const q = questions[currentIdx];
+
+  return (
+    <div className={`mt-6 p-6 rounded-3xl border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
+      <div className="flex justify-between items-center mb-6">
+        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">부동산 경제 퀴즈 ({currentIdx + 1}/{questions.length})</span>
+        <div className={`px-3 py-1 rounded-full text-[10px] font-bold ${isDark ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-500 shadow-sm'}`}>점수: {score}</div>
+      </div>
+      
+      <h5 className={`text-lg font-black mb-6 leading-snug ${isDark ? 'text-white' : 'text-slate-800'}`}>{q.question}</h5>
+      
+      <div className="space-y-3 mb-8">
+        {q.options.map((opt, idx) => {
+          let stateStyles = isDark ? 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50';
+          if (isAnswered) {
+            if (idx === q.correctAnswer) stateStyles = 'bg-emerald-500 text-white border-emerald-500';
+            else if (idx === selected) stateStyles = 'bg-rose-500 text-white border-rose-500';
+            else stateStyles = 'opacity-50 cursor-not-allowed';
+          }
+          return (
+            <button 
+              key={idx} 
+              onClick={() => handleAnswer(idx)}
+              className={`w-full text-left p-4 rounded-2xl border text-sm font-bold transition-all flex items-center gap-3 ${stateStyles}`}
+            >
+              <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] border ${isAnswered && idx === q.correctAnswer ? 'bg-white/20 border-transparent' : ''}`}>{idx + 1}</span>
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+
+      {isAnswered && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className={`p-4 rounded-2xl mb-6 text-xs font-bold leading-relaxed ${isDark ? 'bg-slate-900 text-slate-400 border border-slate-800' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}`}>
+            <div className="flex items-center gap-2 mb-2 font-black uppercase text-[10px] text-indigo-500">
+              <Lightbulb size={14} /> 정답 해설
+            </div>
+            {q.explanation}
+          </div>
+          <button onClick={nextQuestion} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+            {currentIdx < questions.length - 1 ? "다음 문제" : "결과 확인"} <ArrowRight size={18} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- App Component ---
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isApiSettingsOpen, setIsApiSettingsOpen] = useState(false);
   const [activeView, setActiveView] = useState<ViewType>('chat');
   const [theme, setTheme] = useState<ThemeType>('light');
   const [userStats, setUserStats] = useState<UserStats>({
@@ -520,12 +623,6 @@ const App: React.FC = () => {
   }, [messages, isLoading, activeView]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
-
-  const handleApiKeyConfig = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-    }
-  };
 
   const handleSend = async (overrideText?: string, file?: File | null) => {
     const query = overrideText || input;
@@ -579,6 +676,8 @@ const App: React.FC = () => {
 
       let displayText = response.text || "응답 오류";
       let quizData: QuizQuestion[] | undefined;
+      let imageUrl: string | undefined;
+
       const quizMatch = displayText.match(/```quiz-data\s*([\s\S]*?)\s*```/);
       if (quizMatch) {
         try { 
@@ -587,14 +686,25 @@ const App: React.FC = () => {
         } catch(e) {}
       }
 
+      // Check if model returned an image (relevant if model supported it)
+      const imagePart = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+      if (imagePart) {
+        imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+      }
+
       setMessages(prev => [...prev, { 
         role: 'model', 
         text: displayText, 
         quizData,
+        imageUrl,
         groundingSources: response.candidates?.[0]?.groundingMetadata?.groundingChunks?.filter(c => c.web).map(c => ({ title: c.web!.title || '출처', uri: c.web!.uri }))
       }]);
       setPendingFile(null);
-    } catch (e) {
+    } catch (e: any) {
+      if (e.message?.includes("entity was not found")) {
+        alert("API 키가 잘못되었거나 만료되었습니다. 다시 설정해 주세요.");
+        setIsApiSettingsOpen(true);
+      }
       setMessages(prev => [...prev, { role: 'model', text: "시스템 오류입니다. API 설정을 확인해 주세요." }]);
     } finally { setIsLoading(false); }
   };
@@ -617,6 +727,7 @@ const App: React.FC = () => {
   return (
     <div className={`flex h-screen ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'} overflow-hidden w-full font-sans transition-colors duration-300`}>
       <GuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} theme={theme} />
+      <ApiSettingsModal isOpen={isApiSettingsOpen} onClose={() => setIsApiSettingsOpen(false)} theme={theme} />
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -625,7 +736,7 @@ const App: React.FC = () => {
         accept="image/*,application/pdf" 
       />
 
-      <aside className={`hidden md:flex flex-col w-64 ${isDark ? 'bg-slate-900' : 'bg-slate-900'} text-white p-6 shrink-0`}>
+      <aside className={`hidden md:flex flex-col w-64 ${isDark ? 'bg-slate-900' : 'bg-slate-900'} text-white p-6 shrink-0 shadow-2xl`}>
         <div className="flex items-center gap-2 mb-10"><div className="bg-indigo-600 p-2 rounded-lg"><Building2 size={24} /></div><h1 className="text-xl font-bold italic">EcoTutor</h1></div>
         <nav className="flex-1 space-y-2">
           <NavButton view="chat" icon={BrainCircuit} label="지능형 문답 학습" />
@@ -635,7 +746,7 @@ const App: React.FC = () => {
         </nav>
         
         <div className="mt-auto space-y-4">
-          <button onClick={handleApiKeyConfig} className="w-full flex items-center gap-3 p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700">
+          <button onClick={() => setIsApiSettingsOpen(true)} className="w-full flex items-center gap-3 p-3 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700">
             <Key size={18} className="text-amber-500" />
             <span className="text-xs font-black text-slate-300">API 설정</span>
           </button>
@@ -654,13 +765,11 @@ const App: React.FC = () => {
             {activeView === 'analysis' && <><FileSearch size={18} className="text-indigo-600" /> 문서 분석</>}
           </h2>
           <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className={`p-2.5 ${isDark ? 'bg-slate-800 text-amber-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'} rounded-full transition-all`}>
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            <button onClick={() => setIsGuideOpen(true)} className={`p-2.5 ${isDark ? 'bg-slate-800 text-indigo-400 hover:bg-slate-700' : 'bg-slate-100 text-indigo-600 hover:bg-slate-200'} rounded-full transition-all`} title="앱 설명보기">
+            <ThemeToggle theme={theme} toggle={toggleTheme} />
+            <button onClick={() => setIsGuideOpen(true)} className={`p-2.5 ${isDark ? 'bg-slate-800 text-indigo-400 hover:bg-slate-700' : 'bg-slate-100 text-indigo-600 hover:bg-slate-200'} rounded-2xl transition-all shadow-sm`} title="앱 설명보기">
                 <Info size={18} />
             </button>
-            <div className={`flex items-center gap-1.5 text-sm font-black text-amber-500 ${isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-100'} px-4 py-1.5 rounded-full border`}>
+            <div className={`flex items-center gap-1.5 text-sm font-black text-amber-500 ${isDark ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-100'} px-4 py-1.5 rounded-2xl border`}>
                 <Star size={14} fill="currentColor" /> {userStats.points} pts
             </div>
           </div>
@@ -673,19 +782,19 @@ const App: React.FC = () => {
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="text-center mb-10">
                     <div className={`inline-flex p-4 ${isDark ? 'bg-indigo-500/10' : 'bg-indigo-50'} text-indigo-600 rounded-3xl mb-4`}><Sparkle size={36} /></div>
-                    <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-800'} mb-2`}>지능형 부동산 문답 학습</h3>
-                    <p className={`${isDark ? 'text-slate-500' : 'text-slate-500'} font-medium`}>거시경제부터 세금까지 마스터해 보세요.</p>
+                    <h3 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-800'} mb-2`}>지능형 부동산 문답 학습</h3>
+                    <p className={`${isDark ? 'text-slate-500' : 'text-slate-500'} font-medium`}>거시경제 흐름부터 정밀 세무 전략까지, AI 전문가와 대화하세요.</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {CATEGORIZED_STARTERS.map((cat, idx) => (
                       <div key={idx} className={`${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} rounded-[32px] border p-6 shadow-sm transition-colors`}>
-                        <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-3 mb-6">
                           <div className={`p-2 rounded-xl ${cat.bg} ${cat.color}`}><cat.icon size={20} /></div>
-                          <h4 className={`font-bold text-sm ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{cat.category}</h4>
+                          <h4 className={`font-black text-sm ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{cat.category}</h4>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2.5">
                           {cat.starters.map((s, i) => (
-                            <button key={i} onClick={() => handleSend(s)} className={`w-full text-left p-3 rounded-xl ${isDark ? 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-indigo-400 hover:bg-slate-800' : 'bg-slate-50 border-slate-100 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'} border text-xs font-semibold transition-all line-clamp-2`}>{s}</button>
+                            <button key={i} onClick={() => handleSend(s)} className={`w-full text-left p-3.5 rounded-2xl ${isDark ? 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-indigo-400 hover:bg-slate-800' : 'bg-slate-50 border-slate-100 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50'} border text-xs font-bold transition-all line-clamp-2 leading-snug`}>{s}</button>
                           ))}
                         </div>
                       </div>
@@ -704,8 +813,13 @@ const App: React.FC = () => {
                                 <span className="text-xs font-bold truncate">{msg.filePreview.name}</span>
                             </div>
                         )}
+                        {msg.imageUrl && (
+                          <div className="mb-4 rounded-2xl overflow-hidden border border-black/10">
+                            <img src={msg.imageUrl} alt="AI Generated" className="w-full h-auto" />
+                          </div>
+                        )}
                         <div className="prose prose-slate dark:prose-invert max-w-none prose-sm"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
-                        {msg.quizData && <QuizView questions={msg.quizData} onComplete={(s, t) => { setUserStats(prev => ({...prev, points: prev.points + (s*20)})); handleSend("학습 완료!"); }} theme={theme} />}
+                        {msg.quizData && <QuizView questions={msg.quizData} onComplete={(s, t) => { setUserStats(prev => ({...prev, points: prev.points + (s*20), completedQuizzes: prev.completedQuizzes + 1})); handleSend("학습 완료!"); }} theme={theme} />}
                         {msg.groundingSources && msg.groundingSources.length > 0 && (
                           <div className={`mt-4 pt-4 border-t ${isDark ? 'border-slate-800' : 'border-slate-100'} flex flex-wrap gap-2`}>
                             {msg.groundingSources.map((src, idx) => (
@@ -741,12 +855,16 @@ const App: React.FC = () => {
               <div className={`${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} p-8 rounded-[40px] border`}>
                 <h4 className="text-lg font-black mb-6">커리큘럼 학습 현황</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {COURSES.map(course => (
-                    <div key={course.id} className={`${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'} p-6 rounded-[32px] border`}>
-                      <div className={`w-12 h-12 ${course.color} text-white rounded-2xl flex items-center justify-center mb-4`}><course.icon size={24} /></div>
+                  {[
+                    { id: 'intro', title: '입문 코스', desc: '대출/세금 기초', icon: BookOpen, color: 'bg-blue-500' },
+                    { id: 'intermediate', title: '중급 코스', desc: '수급/갭투자 분석', icon: TrendingUp, color: 'bg-purple-500' },
+                    { id: 'advanced', title: '고급 코스', desc: '절세/사이클 전략', icon: Award, color: 'bg-amber-500' }
+                  ].map(course => (
+                    <div key={course.id} className={`${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-100'} p-6 rounded-[32px] border group hover:border-indigo-500/50 transition-all`}>
+                      <div className={`w-12 h-12 ${course.color} text-white rounded-2xl flex items-center justify-center mb-4 shadow-lg`}><course.icon size={24} /></div>
                       <h5 className="font-black text-slate-800 dark:text-slate-200 mb-1">{course.title}</h5>
                       <p className="text-[11px] text-slate-500 mb-4">{course.desc}</p>
-                      <button onClick={() => handleSend(course.quizTopics[0])} className={`w-full py-2.5 ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-indigo-600' : 'bg-white border-slate-200 hover:bg-indigo-600'} border rounded-xl text-xs font-bold hover:text-white transition-all`}>퀴즈 시작</button>
+                      <button onClick={() => handleSend(`${course.title} 관련 퀴즈 내줘`)} className={`w-full py-2.5 ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-indigo-600' : 'bg-white border-slate-200 hover:bg-indigo-600'} border rounded-xl text-xs font-black hover:text-white transition-all`}>퀴즈 시작</button>
                     </div>
                   ))}
                 </div>
@@ -756,20 +874,20 @@ const App: React.FC = () => {
 
           {activeView === 'simulation' && (
             <div className="max-w-6xl mx-auto pb-32 animate-in fade-in duration-500">
-              <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-800'} mb-8`}>지능형 시뮬레이션 🧪</h3>
+              <h3 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-800'} mb-8`}>지능형 시나리오 시뮬레이션 🧪</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {SIMULATION_SCENARIOS.map((s) => (
-                  <div key={s.id} className={`${isDark ? 'bg-slate-900 border-slate-800 hover:border-indigo-900' : 'bg-white border-slate-200 hover:border-indigo-200'} p-8 rounded-[40px] border shadow-sm flex flex-col transition-all`}>
+                  <div key={s.id} className={`${isDark ? 'bg-slate-900 border-slate-800 hover:border-indigo-900' : 'bg-white border-slate-200 hover:border-indigo-200'} p-8 rounded-[40px] border shadow-sm flex flex-col transition-all group`}>
                     <div className="flex items-center gap-4 mb-6">
-                      <div className={`w-14 h-14 ${s.bg} ${s.color} rounded-2xl flex items-center justify-center shrink-0`}><s.icon size={28} /></div>
+                      <div className={`w-14 h-14 ${s.bg} ${s.color} rounded-3xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}><s.icon size={28} /></div>
                       <h4 className={`text-xl font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{s.title}</h4>
                     </div>
-                    <p className={`text-sm mb-6 flex-grow ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{s.desc}</p>
-                    <div className="space-y-2">
+                    <p className={`text-sm mb-8 flex-grow ${isDark ? 'text-slate-400' : 'text-slate-500'} font-medium leading-relaxed`}>{s.desc}</p>
+                    <div className="space-y-2.5">
                       {s.subTopics.map((topic, tidx) => (
-                        <button key={tidx} onClick={() => handleSend(topic)} className={`w-full p-4 text-left ${isDark ? 'bg-indigo-900/10 border-indigo-900/30 text-indigo-400 hover:bg-indigo-900/20' : 'bg-indigo-50 border-indigo-100 text-indigo-800 hover:bg-indigo-100'} border rounded-xl text-xs font-bold flex justify-between items-center transition-all group`}>
+                        <button key={tidx} onClick={() => handleSend(topic)} className={`w-full p-4 text-left ${isDark ? 'bg-indigo-900/10 border-indigo-900/30 text-indigo-400 hover:bg-indigo-900/20' : 'bg-indigo-50 border-indigo-100 text-indigo-800 hover:bg-indigo-100'} border rounded-2xl text-xs font-bold flex justify-between items-center transition-all group/btn`}>
                           <span className="line-clamp-2">{topic}</span>
-                          <ArrowUpRight size={14} className="shrink-0 opacity-40 group-hover:opacity-100" />
+                          <ArrowUpRight size={14} className="shrink-0 opacity-40 group-hover/btn:opacity-100 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-all" />
                         </button>
                       ))}
                     </div>
@@ -783,7 +901,7 @@ const App: React.FC = () => {
             <div className="max-w-5xl mx-auto pb-32 animate-in fade-in duration-500">
               <div className="text-center mb-10">
                 <h3 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-800'} mb-2`}>부동산 문서 정밀 분석 🔎</h3>
-                <p className={`${isDark ? 'text-slate-500' : 'text-slate-500'} font-medium`}>등기부등본, 건축물대장 등을 업로드하여 AI 분석을 받아보세요.</p>
+                <p className={`${isDark ? 'text-slate-500' : 'text-slate-500'} font-medium`}>등기부등본, 건축물대장, 계약서 등을 업로드하여 AI 권리분석을 받으세요.</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -800,7 +918,7 @@ const App: React.FC = () => {
                                     <Upload size={36} />
                                 </div>
                                 <h4 className={`text-xl font-black ${isDark ? 'text-slate-200' : 'text-slate-800'} mb-1`}>분석할 문서 업로드</h4>
-                                <p className="text-sm text-slate-500 font-bold">이미지(PNG, JPG) 또는 PDF 파일을 선택하세요.</p>
+                                <p className="text-sm text-slate-500 font-bold">이미지 또는 PDF 파일을 선택하세요.</p>
                             </>
                         ) : (
                             <div className="text-center p-6">
@@ -808,7 +926,7 @@ const App: React.FC = () => {
                                     <FileText size={36} />
                                 </div>
                                 <h4 className={`text-xl font-black ${isDark ? 'text-emerald-400' : 'text-emerald-800'} mb-1`}>업로드 완료!</h4>
-                                <p className={`text-sm ${isDark ? 'text-emerald-500/60' : 'text-emerald-600'} font-bold mb-4`}>{pendingFile.name}</p>
+                                <p className={`text-sm ${isDark ? 'text-emerald-500/60' : 'text-emerald-600'} font-black mb-4 truncate max-w-xs`}>{pendingFile.name}</p>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setPendingFile(null); }}
                                     className="px-6 py-2.5 bg-rose-500 text-white rounded-2xl text-xs font-black hover:bg-rose-600 transition-colors shadow-lg shadow-rose-900/20"
@@ -828,11 +946,11 @@ const App: React.FC = () => {
                         <ul className="space-y-4">
                             {[1, 2, 3].map(num => (
                                 <li key={num} className="flex gap-3 items-start">
-                                    <div className="w-5 h-5 bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">{num}</div>
-                                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'} leading-relaxed font-medium`}>
-                                        {num === 1 && "분석할 문서의 전체가 잘 보이도록 촬영하거나 스캔하세요."}
-                                        {num === 2 && "아래의 유형별 빠른 분석 버튼을 누르거나 직접 질문을 입력하세요."}
-                                        {num === 3 && "AI가 권리 관계, 위반 사항 등을 정밀 분석해 드립니다."}
+                                    <div className="w-6 h-6 bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">{num}</div>
+                                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'} leading-relaxed font-bold`}>
+                                        {num === 1 && "분석할 문서를 선명하게 촬영하여 업로드하세요."}
+                                        {num === 2 && "아래의 유형별 빠른 분석 버튼을 선택하세요."}
+                                        {num === 3 && "AI가 권리 관계의 사각지대를 정밀 분석합니다."}
                                     </p>
                                 </li>
                             ))}
@@ -848,13 +966,13 @@ const App: React.FC = () => {
                         onClick={() => handleAnalysisStart(guide.prompt)}
                         className={`${isDark ? 'bg-slate-900 border-slate-800 hover:border-indigo-900' : 'bg-white border-slate-200 hover:border-indigo-300'} p-6 rounded-[32px] border shadow-sm hover:shadow-md transition-all text-left group flex flex-col h-full`}
                     >
-                        <div className={`w-12 h-12 ${guide.bg} ${guide.color} rounded-2xl flex items-center justify-center mb-4 shrink-0`}>
+                        <div className={`w-12 h-12 ${guide.bg} ${guide.color} rounded-2xl flex items-center justify-center mb-4 shrink-0 group-hover:rotate-6 transition-transform`}>
                             <guide.icon size={24} />
                         </div>
                         <h4 className={`text-sm font-black ${isDark ? 'text-slate-200' : 'text-slate-800'} mb-2`}>{guide.title}</h4>
-                        <p className={`text-[11px] font-medium mb-6 flex-grow ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{guide.desc}</p>
+                        <p className={`text-[11px] font-medium mb-6 flex-grow ${isDark ? 'text-slate-500' : 'text-slate-500'} leading-relaxed`}>{guide.desc}</p>
                         <div className={`pt-4 border-t ${isDark ? 'border-slate-800' : 'border-slate-50'} mt-auto flex items-center justify-between`}>
-                            <span className="text-[10px] font-black text-indigo-600 uppercase">빠른 분석 실행</span>
+                            <span className="text-[10px] font-black text-indigo-600 uppercase">분석 실행</span>
                             <ArrowRight size={14} className="text-indigo-600 group-hover:translate-x-1 transition-transform" />
                         </div>
                     </button>
@@ -864,7 +982,7 @@ const App: React.FC = () => {
           )}
         </div>
 
-        <div className={`absolute bottom-0 left-0 right-0 p-6 ${isDark ? 'bg-gradient-to-t from-slate-950 to-transparent' : 'bg-gradient-to-t from-slate-50 to-transparent'}`}>
+        <div className={`absolute bottom-0 left-0 right-0 p-6 ${isDark ? 'bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent' : 'bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent'}`}>
           <div className="max-w-3xl mx-auto">
             {pendingFile && activeView !== 'analysis' && (
                 <div className="mb-4 animate-in slide-in-from-bottom-2 duration-300">
@@ -874,22 +992,22 @@ const App: React.FC = () => {
                     </div>
                 </div>
             )}
-            <div className={`flex items-center ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} rounded-[28px] shadow-2xl border overflow-hidden px-2 transition-colors`}>
+            <div className={`flex items-center ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200'} rounded-[32px] shadow-2xl border overflow-hidden px-2 transition-all backdrop-blur-md`}>
                 <button 
                     onClick={() => fileInputRef.current?.click()} 
                     className={`p-4 transition-colors ${pendingFile ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-600'}`}
                 >
-                    <Paperclip size={20} />
+                    <Paperclip size={22} />
                 </button>
                 <input 
                 value={input} 
                 onChange={(e) => setInput(e.target.value)} 
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={pendingFile ? "문서에 대해 무엇을 분석할까요?" : "질문을 입력하거나 문서를 첨부하세요..."} 
-                className={`flex-1 py-4 px-2 bg-transparent border-none focus:ring-0 text-sm font-bold ${isDark ? 'text-slate-100 placeholder:text-slate-600' : 'text-slate-900 placeholder:text-slate-400'}`} 
+                placeholder={pendingFile ? "문서 분석 질문을 입력하세요..." : "부동산 경제에 대해 무엇이든 물어보세요..."} 
+                className={`flex-1 py-5 px-2 bg-transparent border-none focus:ring-0 text-sm font-bold ${isDark ? 'text-slate-100 placeholder:text-slate-600' : 'text-slate-900 placeholder:text-slate-400'}`} 
                 />
-                <button onClick={() => handleSend()} disabled={isLoading || (!input.trim() && !pendingFile)} className="p-3 my-1 mr-1 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 disabled:opacity-30 transition-all">
-                {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                <button onClick={() => handleSend()} disabled={isLoading || (!input.trim() && !pendingFile)} className="p-4 my-1 mr-1 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 disabled:opacity-30 transition-all shadow-lg shadow-indigo-900/20 active:scale-95">
+                {isLoading ? <Loader2 size={22} className="animate-spin" /> : <Send size={22} />}
                 </button>
             </div>
           </div>
@@ -899,11 +1017,11 @@ const App: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { 
-          background: ${isDark ? '#1e293b' : '#e2e8f0'}; 
+          background: ${isDark ? '#334155' : '#cbd5e1'}; 
           border-radius: 10px; 
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
-          background: ${isDark ? '#334155' : '#cbd5e1'}; 
+          background: ${isDark ? '#475569' : '#94a3b8'}; 
         }
       `}</style>
     </div>
